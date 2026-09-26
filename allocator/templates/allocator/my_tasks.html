@@ -1,0 +1,157 @@
+{% extends 'allocator/base.html' %}
+
+{% block title %}My Assigned Tasks &bull; SmartAlloc{% endblock %}
+
+{% block page_header %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center pb-3 mb-4 border-bottom" style="border-color: var(--border-subtle) !important;">
+    <div>
+        <h1 class="h4 fw-bold mb-1 tracking-tight">Personal Workspace</h1>
+        <p class="text-muted mb-0 small">
+            Signed in as <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+            {% if profile %} &bull; {{ profile.get_role_display }}{% endif %}
+        </p>
+    </div>
+    <div class="mt-3 mt-sm-0 d-flex gap-2">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-minimal">
+            &larr; Global Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if profile %}
+<div class="card p-3 mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-7">
+            <div class="d-flex align-items-center gap-3">
+                <div class="avatar-minimal" style="width: 42px; height: 42px; font-size: 1rem;">
+                    {{ request.user.first_name|first|default:request.user.username|first|upper }}
+                </div>
+                <div>
+                    <div class="fw-semibold">{{ request.user.get_full_name|default:request.user.username }}</div>
+                    <div class="text-muted small">
+                        Active Workload: <strong>{{ profile.current_workload }} of {{ profile.max_capacity }} tasks</strong>
+                        ({{ profile.remaining_capacity }} slot{{ profile.remaining_capacity|pluralize }} available)
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5 mt-3 mt-md-0">
+            <div class="d-flex align-items-center gap-2">
+                <div class="progress-minimal flex-grow-1" style="height: 6px;">
+                    <div class="progress-bar-minimal" style="width: {{ profile.workload_percentage }}%;"></div>
+                </div>
+                <span class="text-muted small fw-medium" style="font-size: 0.75rem;">{{ profile.workload_percentage }}%</span>
+            </div>
+            <div class="text-muted small text-end mt-1" style="font-size: 0.7rem;">
+                Completing a task instantly frees capacity for subsequent smart allocations.
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="d-flex gap-2 mb-3">
+    <a href="{% url 'my_tasks' %}?status=ACTIVE" class="btn btn-sm {% if selected_tab == 'ACTIVE' %}btn-dark{% else %}btn-outline-minimal{% endif %}">
+        Active Tasks <span class="badge bg-secondary rounded-pill ms-1">{{ active_count }}</span>
+    </a>
+    <a href="{% url 'my_tasks' %}?status=COMPLETED" class="btn btn-sm {% if selected_tab == 'COMPLETED' %}btn-dark{% else %}btn-outline-minimal{% endif %}">
+        Completed History <span class="badge bg-secondary rounded-pill ms-1">{{ completed_count }}</span>
+    </a>
+    <a href="{% url 'my_tasks' %}?status=ALL" class="btn btn-sm {% if selected_tab == 'ALL' %}btn-dark{% else %}btn-outline-minimal{% endif %}">
+        All Items
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-minimal">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">Priority</th>
+                        <th>Task Information</th>
+                        <th>Required Competency</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                        <th class="text-end" style="width: 150px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                        <tr>
+                            <td>
+                                {% if task.priority == 'URGENT' %}
+                                    <span class="badge-minimal badge-minimal-urgent">Urgent</span>
+                                {% elif task.priority == 'HIGH' %}
+                                    <span class="badge-minimal badge-minimal-high">High</span>
+                                {% elif task.priority == 'MEDIUM' %}
+                                    <span class="badge-minimal badge-minimal-medium">Medium</span>
+                                {% else %}
+                                    <span class="badge-minimal badge-minimal-low">Low</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-medium">{{ task.title }}</div>
+                                {% if task.description %}
+                                    <div class="text-muted small text-truncate" style="max-width: 380px; font-size: 0.8rem;">
+                                        {{ task.description }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge-minimal badge-minimal-secondary" style="font-size: 0.75rem;">
+                                    {{ task.required_skill.name }}
+                                </span>
+                            </td>
+                            <td class="small">
+                                <div>{{ task.deadline|date:"M d, Y" }}</div>
+                                <span class="{% if task.is_overdue %}text-danger fw-semibold{% else %}text-muted{% endif %}" style="font-size: 0.75rem;">
+                                    {% if task.is_overdue %}
+                                        Overdue ({{ task.days_remaining }}d)
+                                    {% elif task.days_remaining == 0 %}
+                                        Due today
+                                    {% else %}
+                                        {{ task.days_remaining }}d remaining
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if task.status == 'IN_PROGRESS' %}
+                                    <span class="badge-minimal badge-minimal-medium">In Progress</span>
+                                {% elif task.status == 'COMPLETED' %}
+                                    <span class="badge-minimal badge-minimal-low">Completed</span>
+                                {% else %}
+                                    <span class="badge-minimal badge-minimal-high">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if task.status != 'COMPLETED' %}
+                                    <form method="POST" action="{% url 'task_complete' task.id %}" class="d-inline m-0">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-dark py-1 px-2" style="font-size: 0.75rem;" title="Mark Task as Done">
+                                            <i class="bi bi-check2 me-1"></i>Mark Done
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-muted small" style="font-size: 0.75rem;">
+                                        <i class="bi bi-check-all text-success me-1"></i>Finished
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted small">
+                                <i class="bi bi-inbox fs-3 d-block mb-1 text-secondary"></i>
+                                No tasks found in this view.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

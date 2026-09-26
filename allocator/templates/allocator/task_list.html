@@ -1,0 +1,172 @@
+{% extends 'allocator/base.html' %}
+
+{% block title %}Tasks &bull; SmartAlloc{% endblock %}
+
+{% block page_header %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center pb-3 mb-4 border-bottom" style="border-color: var(--border-subtle) !important;">
+    <div>
+        <h1 class="h4 fw-bold mb-1 tracking-tight">Tasks</h1>
+        <p class="text-muted mb-0 small">Repository of project deliverables and allocation statuses.</p>
+    </div>
+    <div class="mt-3 mt-sm-0 d-flex gap-2">
+        <a href="{% url 'export_tasks_csv' %}" class="btn btn-outline-minimal">
+            <i class="bi bi-download me-1"></i>Export CSV
+        </a>
+        <form method="POST" action="{% url 'trigger_allocation' %}" class="m-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-minimal">
+                <i class="bi bi-lightning-charge me-1"></i>Allocate Pending
+            </button>
+        </form>
+        <a href="{% url 'task_create' %}" class="btn btn-dark">
+            <i class="bi bi-plus me-1"></i>New Task
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card p-3 mb-4">
+    <form method="GET" action="{% url 'task_list' %}" class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <input type="text" name="q" class="form-control form-control-sm" placeholder="Search tasks..." value="{{ search_query }}">
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                <option value="PENDING" {% if selected_status == 'PENDING' %}selected{% endif %}>Pending</option>
+                <option value="IN_PROGRESS" {% if selected_status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                <option value="COMPLETED" {% if selected_status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                <option value="CANCELLED" {% if selected_status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="priority" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All Priorities</option>
+                <option value="URGENT" {% if selected_priority == 'URGENT' %}selected{% endif %}>Urgent</option>
+                <option value="HIGH" {% if selected_priority == 'HIGH' %}selected{% endif %}>High</option>
+                <option value="MEDIUM" {% if selected_priority == 'MEDIUM' %}selected{% endif %}>Medium</option>
+                <option value="LOW" {% if selected_priority == 'LOW' %}selected{% endif %}>Low</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="skill" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All Skills</option>
+                {% for s in all_skills %}
+                    <option value="{{ s.id }}" {% if selected_skill == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-1">
+            <button type="submit" class="btn btn-sm btn-dark flex-grow-1">Filter</button>
+            {% if search_query or selected_status or selected_priority or selected_skill %}
+                <a href="{% url 'task_list' %}" class="btn btn-sm btn-outline-minimal" title="Clear">
+                    <i class="bi bi-x"></i>
+                </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Task Table -->
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-minimal">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;">Priority</th>
+                        <th>Task</th>
+                        <th>Skill</th>
+                        <th>Assignee</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                        <th class="text-end" style="width: 90px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                        <tr>
+                            <td>
+                                {% if task.priority == 'URGENT' %}
+                                    <span class="badge-minimal badge-minimal-urgent">Urgent</span>
+                                {% elif task.priority == 'HIGH' %}
+                                    <span class="badge-minimal badge-minimal-high">High</span>
+                                {% elif task.priority == 'MEDIUM' %}
+                                    <span class="badge-minimal badge-minimal-medium">Medium</span>
+                                {% else %}
+                                    <span class="badge-minimal badge-minimal-low">Low</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-medium">{{ task.title }}</div>
+                                {% if task.description %}
+                                    <div class="text-muted small text-truncate" style="max-width: 320px; font-size: 0.8rem;">
+                                        {{ task.description }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge-minimal badge-minimal-secondary" style="font-size: 0.75rem;">
+                                    {{ task.required_skill.name }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if task.assigned_to %}
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="avatar-minimal">
+                                            {{ task.assigned_to.first_name|first|default:task.assigned_to.username|first|upper }}
+                                        </div>
+                                        <div class="small fw-medium">{{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</div>
+                                    </div>
+                                {% else %}
+                                    <span class="badge-minimal badge-minimal-high" style="font-size: 0.7rem;">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td class="small">
+                                <div>{{ task.deadline|date:"M d, Y" }}</div>
+                                <span class="{% if task.is_overdue %}text-danger fw-semibold{% else %}text-muted{% endif %}" style="font-size: 0.75rem;">
+                                    {% if task.is_overdue %}
+                                        Overdue ({{ task.days_remaining }}d)
+                                    {% elif task.days_remaining == 0 %}
+                                        Due today
+                                    {% else %}
+                                        {{ task.days_remaining }}d left
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if task.status == 'PENDING' %}
+                                    <span class="badge-minimal badge-minimal-high">Pending</span>
+                                {% elif task.status == 'IN_PROGRESS' %}
+                                    <span class="badge-minimal badge-minimal-medium">In Progress</span>
+                                {% elif task.status == 'COMPLETED' %}
+                                    <span class="badge-minimal badge-minimal-low">Completed</span>
+                                {% else %}
+                                    <span class="badge-minimal badge-minimal-secondary">Cancelled</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'task_edit' task.id %}" class="btn btn-sm btn-outline-minimal py-1 px-2" title="Edit">
+                                    <i class="bi bi-pencil" style="font-size: 0.75rem;"></i>
+                                </a>
+                                {% if can_delete_tasks %}
+                                <a href="{% url 'task_delete' task.id %}" class="btn btn-sm btn-outline-minimal py-1 px-2 text-danger" title="Delete">
+                                    <i class="bi bi-trash" style="font-size: 0.75rem;"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted small">
+                                No tasks found matching current filters.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

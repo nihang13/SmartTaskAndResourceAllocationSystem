@@ -1,0 +1,257 @@
+{% extends 'allocator/base.html' %}
+
+{% block title %}Dashboard &bull; SmartAlloc{% endblock %}
+
+{% block page_header %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center pb-3 mb-4 border-bottom" style="border-color: var(--border-subtle) !important;">
+    <div>
+        <h1 class="h4 fw-bold mb-1 tracking-tight">Overview</h1>
+        <p class="text-muted mb-0 small">Real-time team workload and algorithmic task distribution.</p>
+    </div>
+    <div class="mt-3 mt-sm-0 d-flex gap-2">
+        <a href="{% url 'task_create' %}" class="btn btn-outline-minimal">
+            <i class="bi bi-plus me-1"></i>New Task
+        </a>
+        <form method="POST" action="{% url 'trigger_allocation' %}" class="m-0">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-dark d-flex align-items-center gap-2">
+                <i class="bi bi-lightning-charge" style="font-size: 0.8rem;"></i>
+                <span>Run Allocation</span>
+                {% if pending_tasks > 0 %}
+                    <span class="badge bg-white text-dark rounded-pill px-2" style="font-size: 0.7rem;">{{ pending_tasks }}</span>
+                {% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-box">
+            <div class="stat-label">Total Tasks</div>
+            <div class="stat-value">{{ total_tasks }}</div>
+            <div class="stat-sub">Logged in system</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-box">
+            <div class="stat-label">Pending Match</div>
+            <div class="stat-value text-warning">{{ pending_tasks }}</div>
+            <div class="stat-sub">Ready to allocate</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-box">
+            <div class="stat-label">In Progress</div>
+            <div class="stat-value text-primary">{{ in_progress_tasks }}</div>
+            <div class="stat-sub">Active execution</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-box">
+            <div class="stat-label">Completed</div>
+            <div class="stat-value text-success">{{ completed_tasks }}</div>
+            <div class="stat-sub">Resolved items</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-box">
+            <div class="stat-label">Overdue</div>
+            <div class="stat-value {% if overdue_tasks > 0 %}text-danger{% else %}text-muted{% endif %}">{{ overdue_tasks }}</div>
+            <div class="stat-sub">Past target date</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-box">
+            <div class="stat-label">Team Load</div>
+            <div class="stat-value">{{ avg_utilization }}%</div>
+            <div class="stat-sub">{{ available_resources }}/{{ total_resources }} available</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-semibold small text-uppercase tracking-wider text-muted">Team Capacity</span>
+                <a href="{% url 'user_profiles' %}" class="small text-decoration-none text-muted">View all &rarr;</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-minimal">
+                        <thead>
+                            <tr>
+                                <th>Member</th>
+                                <th>Role</th>
+                                <th>Load</th>
+                                <th style="min-width: 130px;">Utilization</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for profile in profiles %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar-minimal">
+                                                {{ profile.user.first_name|first|default:profile.user.username|first|upper }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-medium">{{ profile.user.get_full_name|default:profile.user.username }}</div>
+                                                <div class="text-muted small" style="font-size: 0.75rem;">@{{ profile.user.username }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><span class="text-muted small">{{ profile.get_role_display }}</span></td>
+                                    <td class="small">
+                                        <strong>{{ profile.current_workload }}</strong> <span class="text-muted">/ {{ profile.max_capacity }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress-minimal flex-grow-1">
+                                                <div class="progress-bar-minimal" style="width: {{ profile.workload_percentage }}%;"></div>
+                                            </div>
+                                            <span class="text-muted small" style="font-size: 0.75rem; width: 32px;">{{ profile.workload_percentage }}%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if profile.is_available %}
+                                            {% if profile.current_workload >= profile.max_capacity %}
+                                                <span class="badge-minimal badge-minimal-urgent">Full</span>
+                                            {% else %}
+                                                <span class="badge-minimal badge-minimal-low">Ready</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge-minimal badge-minimal-secondary">Away</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted small">No team members registered.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-semibold small text-uppercase tracking-wider text-muted">Pending Match Queue</span>
+                <a href="{% url 'task_list' %}?status=PENDING" class="small text-decoration-none text-muted">View all &rarr;</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for task in urgent_pending %}
+                        <div class="list-group-item px-3 py-3 border-bottom" style="border-color: var(--border-subtle) !important;">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div>
+                                    {% if task.priority == 'URGENT' %}
+                                        <span class="badge-minimal badge-minimal-urgent">Urgent</span>
+                                    {% elif task.priority == 'HIGH' %}
+                                        <span class="badge-minimal badge-minimal-high">High</span>
+                                    {% elif task.priority == 'MEDIUM' %}
+                                        <span class="badge-minimal badge-minimal-medium">Medium</span>
+                                    {% else %}
+                                        <span class="badge-minimal badge-minimal-low">Low</span>
+                                    {% endif %}
+                                </div>
+                                <span class="text-muted small" style="font-size: 0.75rem;">
+                                    Due {{ task.deadline|date:"M d" }}
+                                    {% if task.is_overdue %}<span class="text-danger fw-semibold">(Overdue)</span>{% endif %}
+                                </span>
+                            </div>
+                            <div class="fw-medium text-truncate mb-2" style="font-size: 0.875rem;">{{ task.title }}</div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge-minimal badge-minimal-secondary" style="font-size: 0.7rem;">
+                                    {{ task.required_skill.name }}
+                                </span>
+                                <a href="{% url 'task_edit' task.id %}" class="small text-decoration-none text-muted">
+                                    Edit &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="p-4 text-center text-muted small">
+                            <i class="bi bi-check2 text-success fs-4 d-block mb-1"></i>
+                            All tasks currently assigned.
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if urgent_pending %}
+                <div class="card-footer bg-transparent p-3 text-center border-top" style="border-color: var(--border-subtle) !important;">
+                    <form method="POST" action="{% url 'trigger_allocation' %}" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-minimal w-100 btn-sm">
+                            <i class="bi bi-lightning-charge me-1"></i> Allocate Pending Tasks
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold small text-uppercase tracking-wider text-muted">Recent Allocation Logs</span>
+        <a href="{% url 'allocation_logs' %}" class="small text-decoration-none text-muted">Full Audit Trail &rarr;</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-minimal">
+                <thead>
+                    <tr>
+                        <th style="width: 140px;">Time</th>
+                        <th>Task</th>
+                        <th>Assigned Member</th>
+                        <th style="width: 110px;">Score</th>
+                        <th style="width: 100px;">Type</th>
+                        <th>Algorithmic Rationale</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_logs %}
+                        <tr>
+                            <td class="text-nowrap text-muted small">{{ log.allocated_at|date:"M d, H:i" }}</td>
+                            <td class="fw-medium">{{ log.task.title }}</td>
+                            <td>
+                                <span class="small">{{ log.assigned_user.get_full_name|default:log.assigned_user.username }}</span>
+                            </td>
+                            <td>
+                                <span class="badge-minimal {% if log.match_score >= 80 %}badge-minimal-low{% elif log.match_score >= 60 %}badge-minimal-medium{% else %}badge-minimal-high{% endif %}">
+                                    {{ log.match_score|floatformat:1 }}/100
+                                </span>
+                            </td>
+                            <td>
+                                <span class="text-muted small" style="font-size: 0.75rem;">
+                                    {% if log.allocation_type == 'AUTOMATIC' %}Auto{% else %}Manual{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="rationale-box text-truncate" style="max-width: 480px;" title="{{ log.reason }}">
+                                    {{ log.reason }}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted small">
+                                No allocations recorded yet. Run allocation to view decisions.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

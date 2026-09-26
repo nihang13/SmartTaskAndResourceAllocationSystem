@@ -1,0 +1,97 @@
+{% extends 'allocator/base.html' %}
+
+{% block title %}Edit Resource: {{ profile.user.username }} &bull; SmartAlloc{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom" style="border-color: var(--border-subtle) !important;">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb small mb-1">
+                <li class="breadcrumb-item"><a href="{% url 'user_profiles' %}" class="text-decoration-none text-muted">Resources</a></li>
+                <li class="breadcrumb-item active text-dark" aria-current="page">{{ profile.user.get_full_name|default:profile.user.username }}</li>
+            </ol>
+        </nav>
+        <h1 class="h4 fw-bold mb-0 tracking-tight">Edit Resource Profile</h1>
+    </div>
+    <a href="{% url 'user_profiles' %}" class="btn btn-outline-minimal">
+        &larr; Back to Team
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center gap-3 pb-3 mb-4 border-bottom" style="border-color: var(--border-subtle) !important;">
+                    <div class="avatar-minimal" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                        {{ profile.user.first_name|first|default:profile.user.username|first|upper }}
+                    </div>
+                    <div>
+                        <div class="fw-semibold">{{ profile.user.get_full_name|default:profile.user.username }}</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">@{{ profile.user.username }} &bull; {{ profile.user.email|default:"No email" }}</div>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger py-2 small mb-3">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Role -->
+                    <div class="mb-3">
+                        <label for="{{ form.role.id_for_label }}" class="form-label small fw-semibold text-uppercase tracking-wider text-muted">Role</label>
+                        {{ form.role }}
+                        {% if form.role.errors %}
+                            <div class="text-danger small mt-1">{{ form.role.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Max Capacity -->
+                    <div class="mb-3">
+                        <label for="{{ form.max_capacity.id_for_label }}" class="form-label small fw-semibold text-uppercase tracking-wider text-muted">
+                            Max Capacity (Concurrent Tasks)
+                        </label>
+                        {{ form.max_capacity }}
+                        {% if form.max_capacity.errors %}
+                            <div class="text-danger small mt-1">{{ form.max_capacity.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Skills -->
+                    <div class="mb-3">
+                        <label for="{{ form.skills.id_for_label }}" class="form-label small fw-semibold text-uppercase tracking-wider text-muted">
+                            Assigned Skills
+                        </label>
+                        {{ form.skills }}
+                        {% if form.skills.errors %}
+                            <div class="text-danger small mt-1">{{ form.skills.errors.0 }}</div>
+                        {% endif %}
+                        <div class="text-muted small mt-1" style="font-size: 0.75rem;">Hold Ctrl (Cmd) to select multiple.</div>
+                    </div>
+
+                    <!-- Availability -->
+                    <div class="mb-4 form-check">
+                        {{ form.is_available }}
+                        <label class="form-check-label small fw-medium ms-1" for="{{ form.is_available.id_for_label }}">
+                            Available for new task allocations
+                        </label>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top" style="border-color: var(--border-subtle) !important;">
+                        <a href="{% url 'user_profiles' %}" class="btn btn-outline-minimal">Cancel</a>
+                        <button type="submit" class="btn btn-dark px-3">Update Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,302 @@
+:root {
+  --bg-app: #fafafa;
+  --surface: #ffffff;
+  --border-subtle: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --text-main: #09090b;
+  --text-muted: #71717a;
+  --text-light: #a1a1aa;
+  
+  --accent-black: #18181b;
+  --accent-hover: #27272a;
+  
+  --status-pending: #f59e0b;
+  --status-progress: #3b82f6;
+  --status-completed: #10b981;
+  --status-urgent: #ef4444;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  flex: 1;
+}
+
+.navbar-minimal {
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.navbar-minimal .navbar-brand {
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
+}
+
+.navbar-minimal .nav-link {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.navbar-minimal .nav-link:hover {
+  color: var(--text-main);
+  background-color: #f4f4f5;
+}
+
+.navbar-minimal .nav-link.active {
+  color: var(--text-main);
+  background-color: #f4f4f5;
+  font-weight: 600;
+}
+
+.card {
+  background-color: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--border-strong);
+}
+
+.card-header {
+  background-color: transparent;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 1rem 1.25rem;
+}
+
+.card-body {
+  padding: 1.25rem;
+}
+
+.stat-box {
+  padding: 1.25rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.stat-sub {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-top: 0.35rem;
+}
+
+.btn-dark {
+  background-color: var(--accent-black);
+  border-color: var(--accent-black);
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.45rem 0.95rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-dark:hover, .btn-dark:focus {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: #ffffff;
+}
+
+.btn-outline-minimal {
+  background-color: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.45rem 0.95rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-outline-minimal:hover {
+  background-color: #f4f4f5;
+  border-color: var(--border-strong);
+  color: var(--text-main);
+}
+
+.btn-allocation {
+  background-color: var(--accent-black);
+  border: 1px solid var(--accent-black);
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-allocation:hover {
+  background-color: #27272a;
+  border-color: #27272a;
+  color: #ffffff;
+}
+
+.badge-minimal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+
+.badge-minimal-secondary {
+  background-color: #f4f4f5;
+  border-color: #e4e4e7;
+  color: #52525b;
+}
+
+.badge-minimal-urgent {
+  background-color: #fef2f2;
+  border-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.badge-minimal-high {
+  background-color: #fffbeb;
+  border-color: #fef3c7;
+  color: #b45309;
+}
+
+.badge-minimal-medium {
+  background-color: #eff6ff;
+  border-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-minimal-low {
+  background-color: #f0fdf4;
+  border-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot-pending { background-color: var(--status-pending); }
+.status-dot-progress { background-color: var(--status-progress); }
+.status-dot-completed { background-color: var(--status-completed); }
+.status-dot-urgent { background-color: var(--status-urgent); }
+
+.progress-minimal {
+  height: 4px;
+  background-color: #f4f4f5;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar-minimal {
+  background-color: var(--text-main);
+  border-radius: 2px;
+}
+
+.table-minimal {
+  margin-bottom: 0;
+}
+
+.table-minimal thead th {
+  background-color: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.75rem 1rem;
+}
+
+.table-minimal tbody td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+
+.table-minimal tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-minimal tbody tr:hover td {
+  background-color: #fafafa;
+}
+
+.avatar-minimal {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #f4f4f5;
+  color: #3f3f46;
+  border: 1px solid var(--border-subtle);
+}
+
+.rationale-box {
+  background-color: #f8fafc;
+  border: 1px solid var(--border-subtle);
+  border-left: 2px solid var(--text-main);
+  padding: 0.45rem 0.65rem;
+  border-radius: 4px;
+  font-size: 0.775rem;
+  color: #334155;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.form-control, .form-select {
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--text-main);
+  background-color: var(--surface);
+  padding: 0.5rem 0.75rem;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--text-main);
+  box-shadow: 0 0 0 1px var(--text-main);
+}

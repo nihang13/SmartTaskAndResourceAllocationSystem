@@ -1,0 +1,21 @@
+# Environments and Secrets
+.env
+
+# Python virtual environments
+venv/
+.venv/
+env/
+
+# Python compiled files
+__pycache__/
+*.pyc
+
+# Database (if using local SQLite)
+db.sqlite3
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Media and Static directories (uploaded by users)
+/media/
