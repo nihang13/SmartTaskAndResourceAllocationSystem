@@ -131,6 +131,16 @@ python manage.py seed_demo_data
 > - **Password**: `admin123`
 > - **Email**: `admin@example.com`
 
+> **Quick Demo Accounts:**
+> - **Username**: `alice_dev`
+> - **Password**: `demo1234`
+> - **Email**: `admin@example.com`
+
+> **Quick Demo Accounts:**
+> - **Username**: `bob_designer`
+> - **Password**: `demo1234`
+> - **Email**: `admin@example.com`
+
 ### 6. Run the Test Suite
 Verify that the matching algorithm and capacity limits pass all unit tests:
 ```bash
